@@ -58,7 +58,7 @@ public abstract class LongFormat<S extends LongCode> extends AbstractFormat<S, L
 
 				if (++inFieldIndex == fieldSize) {
 					if (beginIndex != -1) {
-						fieldValue = convert(i, text.substring(beginIndex, i));
+						fieldValue = convert(fieldIndex, text.substring(beginIndex, i + 1));
 						beginIndex = -1;
 					}
 

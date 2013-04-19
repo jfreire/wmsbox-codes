@@ -8,33 +8,27 @@ public abstract class LongFormat<S extends LongCode> extends AbstractFormat<S, L
 
 	private final long maxValue;
 	private final int[] masks;
-	private final CodePattern prettyPattern;
 
 	public LongFormat(String name, FieldInfo[] fields) {
 		super(name, fields);
-		this.masks = new int[this.fieldsSize];
+		this.masks = new int[this.fieldSizes];
 		long maxValue = 1l;
 
-		for (int i = 0; i < this.fieldsSize; i++) {
+		for (int i = 0; i < this.fieldSizes; i++) {
 			FieldInfo field = this.fields[i];
 			this.masks[i] = (int) Math.pow(10, field.getSize());
 			maxValue *= this.masks[i];
 		}
 
 		this.maxValue = maxValue;
-		this.prettyPattern = null;
 	}
 
-	public S parse(String text) {
-		if (text == null) {
-			throw new IllegalArgumentException("Empty code");
-		}
-
+	protected S parse(CodePattern pattern, String text, boolean calculateText) {
 		final int length = text.length();
 
-		if (length == this.toStringPattern.length) {
+		if (length == pattern.length) {
 			long value = 0;
-			int[] split = new int[this.fieldsSize];
+			int[] split = new int[this.fieldSizes];
 			FieldInfo field = this.fields[0];
 			int fieldSize = field.getSize();
 			boolean convert = field.isConvert();
@@ -42,44 +36,69 @@ public abstract class LongFormat<S extends LongCode> extends AbstractFormat<S, L
 			int fieldIndex = 0;
 			int beginIndex = -1;
 			int fieldValue = 0;
+			char[] fixChars = pattern.fixChars;
 
 			for (int i = 0; i < length; i++) {
 				final char ch = text.charAt(i);
+				final char fixChar = fixChars[i];
 
-				if (convert) {
-					if (beginIndex == -1) {
-						beginIndex = i;
+				if (fixChar != 0) {
+					if (fixChar != ch) {
+						throw new IllegalArgumentException("Invalid code " + text);
 					}
-				} else if (ch >= '0' && ch <= '9') {
-					fieldValue = fieldValue * 10 + (ch - '0');
 				} else {
-					throw new IllegalArgumentException("Invalid code " + text);
-				}
-
-				if (++inFieldIndex == fieldSize) {
-					if (beginIndex != -1) {
-						fieldValue = convert(i, text.substring(beginIndex, i));
-						beginIndex = -1;
+					if (convert) {
+						if (beginIndex == -1) {
+							beginIndex = i;
+						}
+					} else if (ch >= '0' && ch <= '9') {
+						fieldValue = fieldValue * 10 + (ch - '0');
+					} else {
+						throw new IllegalArgumentException("Invalid code " + text);
 					}
 
-					value = value * this.masks[fieldIndex] + fieldValue;
-					split[fieldIndex++] = fieldValue;
+					if (++inFieldIndex == fieldSize) {
+						if (beginIndex != -1) {
+							fieldValue = convert(fieldIndex, text.substring(beginIndex, i + 1));
+							beginIndex = -1;
+						}
 
-					if (fieldIndex < this.fieldsSize) {
-						field = this.fields[fieldIndex];
-						fieldSize = field.getSize();
-						convert = field.isConvert();
-						inFieldIndex = 0;
-						fieldValue = 0;
+						value = value * this.masks[fieldIndex] + fieldValue;
+						split[fieldIndex++] = fieldValue;
+
+						if (fieldIndex < this.fieldSizes) {
+							field = this.fields[fieldIndex];
+							fieldSize = field.getSize();
+							convert = field.isConvert();
+							inFieldIndex = 0;
+							fieldValue = 0;
+						}
 					}
 				}
 			}
 
-			return create(value, text, split);
+			return create(value, calculateText ? print(this.pattern, value) : text, split);
 		}
 
-		//TODO pretty
-		throw new IllegalArgumentException("Invalid code " + text);
+		return null;
+	}
+
+	protected S parseWithOutException(String text) {
+		return parse(this.pattern, text, true);
+	}
+
+	public S parse(String text) {
+		if (text == null) {
+			throw new IllegalArgumentException("Empty code");
+		}
+
+		S code = parseWithOutException(text);
+
+		if (code == null) {
+			throw new IllegalArgumentException("Invalid code " + text);
+		}
+
+		return code;
 	}
 
 	public S create(final int[] fieldValues) {
@@ -87,65 +106,71 @@ public abstract class LongFormat<S extends LongCode> extends AbstractFormat<S, L
 			throw new IllegalArgumentException("Null value");
 		}
 
-		if (fieldValues.length != this.fieldsSize) {
+		if (fieldValues.length != this.fieldSizes) {
 			throw new IllegalArgumentException("Invalid fields number " + fieldValues.length);
 		}
 
-		final int length = this.toStringPattern.length;
-		char[] chars = new char[length];
-		System.arraycopy(this.toStringPattern, 0, chars, 0, length);
-		int stIndex = 0;
+		char[] chars = this.pattern.start();
 		long result = 0;
 
-		for (int i = 0; i < this.fieldsSize; i++) {
+		for (int i = 0; i < this.fieldSizes; i++) {
 			final FieldInfo field = this.fields[i];
 			final int fieldValue = fieldValues[i];
 			final int fieldSize = field.getSize();
-			stIndex += fieldSize;
+			int stIndex = this.pattern.fieldEndIndexes[i];
 
 			if (field.isConvert()) {
 				final String code = convert(i, fieldValue);
 
 				for (int j = fieldSize - 1; j >= 0; j--) {
-					chars[--stIndex] = code.charAt(j);
+					chars[stIndex--] = code.charAt(j);
 				}
 			} else {
 				int currentFieldValue = fieldValue;
 
 				for (int j = fieldSize - 1; j >= 0; j--) {
 					int newFieldValue = currentFieldValue / 10;
-					chars[--stIndex] = (char) ('0' + (currentFieldValue - (newFieldValue * 10)));
+					chars[stIndex--] = (char) ('0' + (currentFieldValue - (newFieldValue * 10)));
 					currentFieldValue = newFieldValue;
 				}
 			}
 
-			stIndex += fieldSize;
 			result = result * this.masks[i] + fieldValue;
 		}
 
-		return create(result, new String(chars), fieldValues);
+		return create(result, this.pattern.result(chars), fieldValues);
 	}
 
-	public String pretty(S code) {
-		char[] chars = this.prettyPattern.getPattern();
-		long currentValue = code.longValue();
+	protected String print(CodePattern pattern, long value) {
+		char[] chars = pattern.start();
+		long currentValue = value;
 
-		for (int i = this.fieldsSize - 1;  i >= 0; i--) {
+		for (int i = this.fieldSizes - 1;  i >= 0; i--) {
 			final long newValue = currentValue / this.masks[i];
 			final int fieldValue = (int) (currentValue - (newValue * this.masks[i]));
-			write(i, fieldValue, chars, this.prettyPattern);
+			final FieldInfo field = this.fields[i];
+			int stIndex = pattern.fieldEndIndexes[i];
+
+			if (field.isConvert()) {
+				final String fieldCode = convert(i, fieldValue);
+
+				for (int j = field.getSize() - 1; j >= 0; j--) {
+					chars[stIndex--] = fieldCode.charAt(j);
+				}
+			} else {
+				int currentFieldValue = fieldValue;
+
+				for (int j = field.getSize() - 1; j >= 0; j--) {
+					int newFieldValue = currentFieldValue / 10;
+					chars[stIndex--] = (char) ('0' + (currentFieldValue - (newFieldValue * 10)));
+					currentFieldValue = newFieldValue;
+				}
+			}
+
 			currentValue = newValue;
 		}
 
-		return this.prettyPattern.result(chars);
-	}
-
-	public void write(int index, int value, char[] chars, CodePattern pattern) {
-		if (this.fields[index].isConvert()) {
-			pattern.write(index, convert(index, value), chars);
-		} else {
-			pattern.write(index, value, chars);
-		}
+		return pattern.result(chars);
 	}
 
 	public S create(final Long value) {
@@ -158,17 +183,15 @@ public abstract class LongFormat<S extends LongCode> extends AbstractFormat<S, L
 		}
 
 		long currentValue = value.longValue();
-		int[] split = new int[this.fieldsSize];
-		int length = this.toStringPattern.length;
-		char[] chars = new char[length];
-		System.arraycopy(this.toStringPattern, 0, chars, 0, length);
-		int stIndex = length - 1;
+		int[] split = new int[this.fieldSizes];
+		char[] chars = this.pattern.start();
 
-		for (int i = this.fieldsSize - 1;  i >= 0; i--) {
+		for (int i = this.fieldSizes - 1;  i >= 0; i--) {
 			final long newValue = currentValue / this.masks[i];
 			final int fieldValue = (int) (currentValue - (newValue * this.masks[i]));
 			split[i] = fieldValue;
 			final FieldInfo field = this.fields[i];
+			int stIndex = this.pattern.fieldEndIndexes[i];
 
 			if (field.isConvert()) {
 				final String code = convert(i, fieldValue);

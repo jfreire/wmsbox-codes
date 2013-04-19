@@ -9,10 +9,10 @@ public class StringFormat<S extends StringCode> extends AbstractFormat<S, String
 
 	public StringFormat(String name, FieldInfo[] fields) {
 		super(name, fields);
-		this.valueIndexes = new int[this.fieldsSize];
+		this.valueIndexes = new int[this.fieldSizes];
 		int currentIndex = 0;
 
-		for (int i = 0; i < this.fieldsSize; i++) {
+		for (int i = 0; i < this.fieldSizes; i++) {
 			FieldInfo field = this.fields[i];
 			final int size = field.getSize();
 			this.valueIndexes[i] = currentIndex;
@@ -23,12 +23,6 @@ public class StringFormat<S extends StringCode> extends AbstractFormat<S, String
 	public S parse(String text) {
 		if (text == null) {
 			throw new IllegalArgumentException("Empty code");
-		}
-
-		final int length = text.length();
-
-		if (length == this.toStringPattern.length) {
-			return null; //build(Long.parseLong(text), text);
 		}
 
 		throw new IllegalArgumentException("Invalid code " + text);

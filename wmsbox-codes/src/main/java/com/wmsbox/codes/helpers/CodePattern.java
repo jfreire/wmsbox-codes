@@ -1,25 +1,80 @@
 package com.wmsbox.codes.helpers;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+/**
+ * {4}-{2}
+ * @author jfreire
+ */
 public class CodePattern {
 
+	public final int length;
+	public final char[] fixChars;
+	public final int[] fieldEndIndexes;
 	private final char[] pattern;
-	private final int[] fieldsIndex;
-	private final int[] sizes;
-	private final int length;
 	private final AtomicBoolean needClone = new AtomicBoolean();
 
-	public CodePattern() {
-		this.pattern = null;
-		this.fieldsIndex = null;
-		this.length = -1;
-		this.sizes = null;
+	public CodePattern(char[] pattern, int[] fieldEndIndexes) {
+		this.pattern = pattern;
+		this.fixChars = new char[pattern.length];
+		this.length = pattern.length;
+		this.fieldEndIndexes = fieldEndIndexes;
 	}
 
-	public char[] getPattern() {
+	public CodePattern(String pattern) {
+		final StringBuilder sbPattern = new StringBuilder();
+		final List<Character> fixChars = new ArrayList<Character>();
+		final List<Integer> fieldEndIndexes = new ArrayList<Integer>();
+		int beginField = -1;
+
+		for (int i = 0; i < pattern.length(); i++) {
+			final char ch = pattern.charAt(i);
+
+			if (beginField != -1) {
+				if (ch == '}') {
+					final int size = Integer.parseInt(pattern.substring(beginField, i));
+
+					for (int j = 0; j < size; j++) {
+						sbPattern.append(' ');
+						fixChars.add(null);
+					}
+
+					fieldEndIndexes.add(sbPattern.length() - 1);
+					beginField = -1;
+				} else if (!Character.isDigit(ch)) {
+					throw new IllegalArgumentException("Invalid pattern: " + pattern);
+				}
+			} else {
+				if (ch == '{') {
+					beginField = i + 1;
+				} else {
+					sbPattern.append(ch);
+					fixChars.add(ch);
+				}
+			}
+		}
+
+		this.length = sbPattern.length();
+		this.pattern = sbPattern.toString().toCharArray();
+		this.fixChars = new char[this.length];
+
+		for (int i = 0; i < this.length; i++) {
+			Character ch = fixChars.get(i);
+			this.fixChars[i] = ch == null ? 0 : ch;
+		}
+
+		this.fieldEndIndexes = new int[fieldEndIndexes.size()];
+
+		for (int i = 0; i < fieldEndIndexes.size(); i++) {
+			this.fieldEndIndexes[i] = fieldEndIndexes.get(i);
+		}
+	}
+
+	public char[] start() {
 		if (this.needClone.compareAndSet(false, true)) {
-			return pattern;
+			return this.pattern;
 		}
 
 		char[] chars = new char[this.length];
@@ -29,28 +84,10 @@ public class CodePattern {
 	}
 
 	public String result(char[] chars) {
-		if (chars == pattern) {
+		if (chars == this.pattern) {
 			this.needClone.set(false);
 		}
 
 		return new String(chars);
-	}
-
-	public void write(int index, int value, char[] chars) {
-		int fieldIndex = this.fieldsIndex[index];
-
-		for (int j = this.sizes[index] - 1; j >= 0; j--) {
-			final int newFieldValue = value / 10;
-			chars[fieldIndex--] = (char) ('0' + (value - (newFieldValue * 10)));
-			value = newFieldValue;
-		}
-	}
-
-	public void write(int index, String value, char[] chars) {
-		int fieldIndex = this.fieldsIndex[index];
-
-		for (int j = this.sizes[index] - 1; j >= 0; j--) {
-			chars[fieldIndex--] = value.charAt(j);
-		}
 	}
 }

@@ -11,34 +11,37 @@ public abstract class AbstractFormat<C extends Code, V extends Serializable>
 
 	private final String name;
 	protected final FieldInfo[] fields;
-	protected final int fieldsSize;
-	protected final int toStringLength;
-	protected final char[] toStringPattern;
+	protected final int fieldSizes;
+	protected final CodePattern pattern;
 
 	public AbstractFormat(String name, FieldInfo[] fields) {
 		this.name = name;
 		this.fields = fields;
-		this.fieldsSize = fields.length;
+		this.fieldSizes = fields.length;
 
 		int toStringLength = 0;
 
-		for (int i = 0; i < this.fieldsSize; i++) {
+		for (int i = 0; i < this.fieldSizes; i++) {
 			toStringLength += this.fields[i].getSize();
 		}
 
-		this.toStringLength = toStringLength;
-		this.toStringPattern = new char[toStringLength];
+		char[] pattern = new char[toStringLength];
+		int[] fieldEndIndexes = new int[this.fieldSizes];
 		int toStringIndex = 0;
 
-		for (int i = 0; i < this.fieldsSize; i++) {
+		for (int i = 0; i < this.fieldSizes; i++) {
 			final FieldInfo field = this.fields[i];
 			final int size = field.getSize();
 			char ch = Number.class.isAssignableFrom(field.getType()) ? '0' : ' ';
 
 			for (int k = 0; k < size; k++) {
-				this.toStringPattern[toStringIndex++] = ch;
+				pattern[toStringIndex++] = ch;
 			}
+
+			fieldEndIndexes[i] = toStringIndex - 1;
 		}
+
+		this.pattern = new CodePattern(pattern, fieldEndIndexes);
 	}
 
 	public String getName() {

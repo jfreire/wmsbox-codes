@@ -1,4 +1,4 @@
-package com.wmsbox.codes.helpers;
+package com.wmsbox.codes.numeric;
 
 import com.wmsbox.codes.Size;
 import com.wmsbox.codes.numeric.LongCode;

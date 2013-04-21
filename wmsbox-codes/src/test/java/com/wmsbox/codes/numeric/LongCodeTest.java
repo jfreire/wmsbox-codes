@@ -1,4 +1,4 @@
-package com.wmsbox.codes.helpers;
+package com.wmsbox.codes.numeric;
 
 import junit.framework.Assert;
 

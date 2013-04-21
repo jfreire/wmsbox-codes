@@ -3,13 +3,13 @@ package com.wmsbox.codes.numeric;
 import com.wmsbox.codes.helpers.CodePattern;
 import com.wmsbox.codes.metainfo.FieldInfo;
 
-public abstract class LongFormat<S extends LongCode> extends NumericFormat<S, Long> {
+public abstract class IntegerFormat<S extends IntegerCode> extends NumericFormat<S, Integer> {
 
-	private final long maxValue;
+	private final int maxValue;
 
-	public LongFormat(String name, FieldInfo[] fields) {
+	public IntegerFormat(String name, FieldInfo[] fields) {
 		super(name, fields);
-		this.maxValue = (long) (Math.pow(10, this.pattern.length)) - 1;
+		this.maxValue = (int) (Math.pow(10, this.pattern.length)) - 1;
 	}
 
 	@Override
@@ -17,7 +17,7 @@ public abstract class LongFormat<S extends LongCode> extends NumericFormat<S, Lo
 		final int length = text.length();
 
 		if (length == pattern.length) {
-			long value = 0;
+			int value = 0;
 			int[] split = new int[this.fieldSizes];
 			FieldInfo field = this.fields[0];
 			int fieldSize = field.getSize();
@@ -74,7 +74,7 @@ public abstract class LongFormat<S extends LongCode> extends NumericFormat<S, Lo
 		return null;
 	}
 
-	public S create(final int[] fieldValues) {
+	protected S create(final int[] fieldValues) {
 		if (fieldValues == null) {
 			throw new IllegalArgumentException("Null value");
 		}
@@ -84,7 +84,7 @@ public abstract class LongFormat<S extends LongCode> extends NumericFormat<S, Lo
 		}
 
 		char[] chars = this.pattern.start();
-		long result = 0;
+		int result = 0;
 
 		for (int i = 0; i < this.fieldSizes; i++) {
 			final FieldInfo field = this.fields[i];
@@ -114,13 +114,13 @@ public abstract class LongFormat<S extends LongCode> extends NumericFormat<S, Lo
 		return create(result, this.pattern.result(chars), fieldValues);
 	}
 
-	protected String print(CodePattern pattern, long value) {
+	protected String print(CodePattern pattern, int value) {
 		char[] chars = pattern.start();
-		long currentValue = value;
+		int currentValue = value;
 
 		for (int i = this.fieldSizes - 1;  i >= 0; i--) {
-			final long newValue = currentValue / this.masks[i];
-			final int fieldValue = (int) (currentValue - (newValue * this.masks[i]));
+			final int newValue = currentValue / this.masks[i];
+			final int fieldValue = currentValue - (newValue * this.masks[i]);
 			final FieldInfo field = this.fields[i];
 			int stIndex = pattern.fieldEndIndexes[i];
 
@@ -147,7 +147,7 @@ public abstract class LongFormat<S extends LongCode> extends NumericFormat<S, Lo
 	}
 
 	@Override
-	public S create(final Long value) {
+	public S create(final Integer value) {
 		if (value == null) {
 			throw new IllegalArgumentException("Null value");
 		}
@@ -156,13 +156,13 @@ public abstract class LongFormat<S extends LongCode> extends NumericFormat<S, Lo
 			throw new IllegalArgumentException("Invalid code " + value);
 		}
 
-		long currentValue = value.longValue();
+		int currentValue = value.intValue();
 		int[] split = new int[this.fieldSizes];
 		char[] chars = this.pattern.start();
 
 		for (int i = this.fieldSizes - 1;  i >= 0; i--) {
-			final long newValue = currentValue / this.masks[i];
-			final int fieldValue = (int) (currentValue - (newValue * this.masks[i]));
+			final int newValue = currentValue / this.masks[i];
+			final int fieldValue = currentValue - (newValue * this.masks[i]);
 			split[i] = fieldValue;
 			final FieldInfo field = this.fields[i];
 			int stIndex = this.pattern.fieldEndIndexes[i];
@@ -189,5 +189,5 @@ public abstract class LongFormat<S extends LongCode> extends NumericFormat<S, Lo
 		return create(value, new String(chars), split);
 	}
 
-	protected abstract S create(long value, String toString, int[] values);
+	protected abstract S create(int value, String toString, int[] values);
 }

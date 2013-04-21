@@ -1,9 +1,8 @@
 package com.wmsbox.codes;
 
-import java.io.Serializable;
 
 
-public interface PrettyCodeFormat<C extends Code, V extends Serializable> extends CodeFormat<C, V> {
+public interface PrettyCodeFormat<C extends Code> extends CodeFormat<C> {
 
 	String prettyPrint(C code);
 }

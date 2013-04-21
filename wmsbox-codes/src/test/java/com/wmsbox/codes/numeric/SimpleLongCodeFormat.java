@@ -1,5 +1,7 @@
-package com.wmsbox.codes.helpers;
+package com.wmsbox.codes.numeric;
 
+import com.wmsbox.codes.helpers.CodePattern;
+import com.wmsbox.codes.helpers.FieldsExtractor;
 import com.wmsbox.codes.numeric.LongFormat;
 
 public class SimpleLongCodeFormat extends LongFormat<SimpleLongCode> {

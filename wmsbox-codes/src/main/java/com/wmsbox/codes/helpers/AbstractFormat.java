@@ -1,13 +1,10 @@
 package com.wmsbox.codes.helpers;
 
-import java.io.Serializable;
-
 import com.wmsbox.codes.Code;
 import com.wmsbox.codes.CodeFormat;
 import com.wmsbox.codes.metainfo.FieldInfo;
 
-public abstract class AbstractFormat<C extends Code, V extends Serializable>
-		implements CodeFormat<C, V> {
+public abstract class AbstractFormat<C extends Code> implements CodeFormat<C> {
 
 	private final String name;
 	protected final FieldInfo[] fields;
@@ -32,10 +29,9 @@ public abstract class AbstractFormat<C extends Code, V extends Serializable>
 		for (int i = 0; i < this.fieldSizes; i++) {
 			final FieldInfo field = this.fields[i];
 			final int size = field.getSize();
-			char ch = Number.class.isAssignableFrom(field.getType()) ? '0' : ' ';
 
 			for (int k = 0; k < size; k++) {
-				pattern[toStringIndex++] = ch;
+				pattern[toStringIndex++] = ' ';
 			}
 
 			fieldEndIndexes[i] = toStringIndex - 1;
@@ -47,4 +43,24 @@ public abstract class AbstractFormat<C extends Code, V extends Serializable>
 	public String getName() {
 		return this.name;
 	}
+
+	public C parse(String text) {
+		if (text == null) {
+			throw new IllegalArgumentException("Empty code");
+		}
+
+		C code = parseWithOutException(text);
+
+		if (code == null) {
+			throw new IllegalArgumentException("Invalid code " + text);
+		}
+
+		return code;
+	}
+
+	protected C parseWithOutException(String text) {
+		return parse(this.pattern, text, true);
+	}
+
+	protected abstract C parse(CodePattern pattern, String text, boolean calculateText);
 }

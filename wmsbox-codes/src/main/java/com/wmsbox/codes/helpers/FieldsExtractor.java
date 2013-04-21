@@ -44,9 +44,7 @@ public class FieldsExtractor {
 						+ " not have size");
 			}
 
-			final Class<?> type = types[i + 1];
-
-			infos[i] = new FieldInfo(size, type, false);
+			infos[i] = new FieldInfo(size, false);
 		}
 
 		return infos;

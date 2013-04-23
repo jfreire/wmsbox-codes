@@ -42,7 +42,6 @@ public class ToTestCode extends LongCode {
 		this.field4 = field4;
 		this.field5 = field5;
 		this.field6 = field6;
-
 	}
 
 	public int getField1() {

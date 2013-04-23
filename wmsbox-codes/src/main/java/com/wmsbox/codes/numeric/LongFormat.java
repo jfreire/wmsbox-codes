@@ -46,24 +46,24 @@ public abstract class LongFormat<S extends LongCode> extends NumericFormat<S, Lo
 					} else {
 						throw new IllegalArgumentException("Invalid code " + text);
 					}
-				}
+					
+					if (++inFieldIndex == fieldSize) {
+						if (beginIndex != -1) {
+							fieldValue = convertToValue(fieldIndex,
+									text.substring(beginIndex, i + 1));
+							beginIndex = -1;
+						}
 
-				if (++inFieldIndex == fieldSize) {
-					if (beginIndex != -1) {
-						fieldValue = convertToValue(fieldIndex,
-								text.substring(beginIndex, i + 1));
-						beginIndex = -1;
-					}
+						value = value * this.masks[fieldIndex] + fieldValue;
+						split[fieldIndex++] = fieldValue;
 
-					value = value * this.masks[fieldIndex] + fieldValue;
-					split[fieldIndex++] = fieldValue;
-
-					if (fieldIndex < this.fieldSizes) {
-						field = this.fields[fieldIndex];
-						fieldSize = field.getSize();
-						convert = field.isConvert();
-						inFieldIndex = 0;
-						fieldValue = 0;
+						if (fieldIndex < this.fieldSizes) {
+							field = this.fields[fieldIndex];
+							fieldSize = field.getSize();
+							convert = field.isConvert();
+							inFieldIndex = 0;
+							fieldValue = 0;
+						}
 					}
 				}
 			}
@@ -111,7 +111,7 @@ public abstract class LongFormat<S extends LongCode> extends NumericFormat<S, Lo
 			result = result * this.masks[i] + fieldValue;
 		}
 
-		return create(result, this.pattern.result(chars), fieldValues);
+		return create(result, new String(chars), fieldValues);
 	}
 
 	protected String print(CodePattern pattern, long value) {
@@ -143,7 +143,7 @@ public abstract class LongFormat<S extends LongCode> extends NumericFormat<S, Lo
 			currentValue = newValue;
 		}
 
-		return pattern.result(chars);
+		return new String(chars);
 	}
 
 	@Override

@@ -2,7 +2,6 @@ package com.wmsbox.codes.helpers;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * {4}-{2}
@@ -14,7 +13,6 @@ public class CodePattern {
 	public final char[] fixChars;
 	public final int[] fieldEndIndexes;
 	private final char[] pattern;
-	private final AtomicBoolean needClone = new AtomicBoolean();
 
 	public CodePattern(char[] pattern, int[] fieldEndIndexes) {
 		this.pattern = pattern;
@@ -73,21 +71,9 @@ public class CodePattern {
 	}
 
 	public char[] start() {
-		if (this.needClone.compareAndSet(false, true)) {
-			return this.pattern;
-		}
-
 		char[] chars = new char[this.length];
 		System.arraycopy(this.pattern, 0, chars, 0, this.length);
 
 		return chars;
-	}
-
-	public String result(char[] chars) {
-		if (chars == this.pattern) {
-			this.needClone.set(false);
-		}
-
-		return new String(chars);
 	}
 }

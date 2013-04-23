@@ -30,6 +30,11 @@ public class SimpleLongCodeFormat extends LongFormat<SimpleLongCode> {
 
 		return super.parseWithOutException(text);
 	}
+	
+	@Override
+	public int[] getAcceptedLengths() {
+		return new int[] { this.pattern.length, this.prettyPattern.length };
+	}
 
 	public String prettyPrint(SimpleLongCode code) {
 		return print(this.prettyPattern, code.longValue());

@@ -111,7 +111,7 @@ public abstract class IntegerFormat<S extends IntegerCode> extends NumericFormat
 			result = result * this.masks[i] + fieldValue;
 		}
 
-		return create(result, this.pattern.result(chars), fieldValues);
+		return create(result, new String(chars), fieldValues);
 	}
 
 	protected String print(CodePattern pattern, int value) {
@@ -143,7 +143,7 @@ public abstract class IntegerFormat<S extends IntegerCode> extends NumericFormat
 			currentValue = newValue;
 		}
 
-		return pattern.result(chars);
+		return new String(chars);
 	}
 
 	@Override

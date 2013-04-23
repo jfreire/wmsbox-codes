@@ -43,4 +43,18 @@
             </plugin>
         </plugins>
     </build>
+    
+    <distributionManagement>
+        <repository>
+            <name>Maven Nexus Repository STG</name>
+            <id>nexus</id>
+            <url>http://10.238.2.11:9090/nexus/content/repositories/releases</url>
+        </repository>
+        <snapshotRepository>
+            <id>snapshot-repository</id>
+            <name>Maven Nexus Snapshot Repository STG</name>
+            <url>http://10.238.2.11:9090/nexus/content/repositories/snapshots/</url>
+            <uniqueVersion>true</uniqueVersion>
+        </snapshotRepository>
+    </distributionManagement>
 </project>

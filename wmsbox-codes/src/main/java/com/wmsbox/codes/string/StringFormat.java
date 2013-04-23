@@ -44,7 +44,7 @@ public abstract class StringFormat<S extends StringCode> extends AbstractFormat<
 				}
 			}
 
-			return create(calculateText ? this.pattern.result(toString) : text, split);
+			return create(calculateText ? new String(toString) : text, split);
 		}
 
 		return null;

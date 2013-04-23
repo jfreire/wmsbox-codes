@@ -61,6 +61,10 @@ public abstract class AbstractFormat<C extends Code> implements CodeFormat<C> {
 	protected C parseWithOutException(String text) {
 		return parse(this.pattern, text, true);
 	}
+	
+	public int[] getAcceptedLengths() {
+		return new int[] { this.pattern.length };
+	}
 
 	protected abstract C parse(CodePattern pattern, String text, boolean calculateText);
 }

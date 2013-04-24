@@ -1,16 +1,15 @@
 package com.wmsbox.codes.numeric;
 
-import com.wmsbox.codes.helpers.CodePattern;
 import com.wmsbox.codes.helpers.FieldsExtractor;
-import com.wmsbox.codes.numeric.LongFormat;
+import com.wmsbox.codes.helpers.NumericCodePattern;
 
 public class SimpleLongCodeFormat extends LongFormat<SimpleLongCode> {
 
-	private final CodePattern prettyPattern;
+	private final NumericCodePattern prettyPattern;
 
 	public SimpleLongCodeFormat() {
 		super("SimpleLong", FieldsExtractor.extract(SimpleLongCode.class));
-		this.prettyPattern = new CodePattern("{3}-{1}.{2}");
+		this.prettyPattern = new NumericCodePattern("{3}-{1}.{2}");
 	}
 
 	@Override
@@ -30,7 +29,7 @@ public class SimpleLongCodeFormat extends LongFormat<SimpleLongCode> {
 
 		return super.parseWithOutException(text);
 	}
-	
+
 	@Override
 	public int[] getAcceptedLengths() {
 		return new int[] { this.pattern.length, this.prettyPattern.length };

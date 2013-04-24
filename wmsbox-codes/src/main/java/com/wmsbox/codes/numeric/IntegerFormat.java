@@ -1,7 +1,9 @@
 package com.wmsbox.codes.numeric;
 
 import com.wmsbox.codes.helpers.CodePattern;
+import com.wmsbox.codes.helpers.NumericCodePattern;
 import com.wmsbox.codes.metainfo.FieldInfo;
+import com.wmsbox.codes.metainfo.NumericConversor;
 
 public abstract class IntegerFormat<S extends IntegerCode> extends NumericFormat<S, Integer> {
 
@@ -9,7 +11,12 @@ public abstract class IntegerFormat<S extends IntegerCode> extends NumericFormat
 
 	public IntegerFormat(String name, FieldInfo[] fields) {
 		super(name, fields);
-		this.maxValue = (int) (Math.pow(10, this.pattern.length)) - 1;
+		this.maxValue = (int) (Math.pow(10, this.digits)) - 1;
+	}
+
+	public IntegerFormat(String name, FieldInfo[] fields, NumericCodePattern pattern) {
+		super(name, fields, pattern);
+		this.maxValue = (int) (Math.pow(10, this.digits)) - 1;
 	}
 
 	@Override
@@ -19,9 +26,10 @@ public abstract class IntegerFormat<S extends IntegerCode> extends NumericFormat
 		if (length == pattern.length) {
 			int value = 0;
 			int[] split = new int[this.fieldSizes];
-			FieldInfo field = this.fields[0];
-			int fieldSize = field.getSize();
-			boolean convert = field.isConvert();
+			int[] sizes = pattern.sizes;
+			NumericConversor[] conversors = ((NumericCodePattern) pattern).conversors;
+			int fieldSize = sizes[0];
+			NumericConversor conversor = conversors[0];
 			int inFieldIndex = 0;
 			int fieldIndex = 0;
 			int beginIndex = -1;
@@ -37,7 +45,7 @@ public abstract class IntegerFormat<S extends IntegerCode> extends NumericFormat
 						throw new IllegalArgumentException("Invalid code " + text);
 					}
 				} else {
-					if (convert) {
+					if (conversor != null) {
 						if (beginIndex == -1) {
 							beginIndex = i;
 						}
@@ -49,8 +57,7 @@ public abstract class IntegerFormat<S extends IntegerCode> extends NumericFormat
 
 					if (++inFieldIndex == fieldSize) {
 						if (beginIndex != -1) {
-							fieldValue = convertToValue(fieldIndex,
-									text.substring(beginIndex, i + 1));
+							fieldValue = conversors[i].convertToInt(text.substring(beginIndex, i + 1));
 							beginIndex = -1;
 						}
 
@@ -58,9 +65,8 @@ public abstract class IntegerFormat<S extends IntegerCode> extends NumericFormat
 						split[fieldIndex++] = fieldValue;
 
 						if (fieldIndex < this.fieldSizes) {
-							field = this.fields[fieldIndex];
-							fieldSize = field.getSize();
-							convert = field.isConvert();
+							fieldSize = sizes[fieldIndex];
+							conversor = conversors[fieldIndex];
 							inFieldIndex = 0;
 							fieldValue = 0;
 						}
@@ -68,7 +74,8 @@ public abstract class IntegerFormat<S extends IntegerCode> extends NumericFormat
 				}
 			}
 
-			return create(value, calculateText ? print(this.pattern, value) : text, split);
+			return create(value, calculateText
+					? print((NumericCodePattern) this.pattern, value) : text, split);
 		}
 
 		return null;
@@ -83,17 +90,20 @@ public abstract class IntegerFormat<S extends IntegerCode> extends NumericFormat
 			throw new IllegalArgumentException("Invalid fields number " + fieldValues.length);
 		}
 
-		char[] chars = this.pattern.start();
+		char[] chars = this.pattern.chars();
+		int[] fields = this.pattern.sizes;
+		NumericConversor[] conversors = ((NumericCodePattern) this.pattern).conversors;
+
 		int result = 0;
 
 		for (int i = 0; i < this.fieldSizes; i++) {
-			final FieldInfo field = this.fields[i];
+			final NumericConversor conversor = conversors[i];
 			final int fieldValue = fieldValues[i];
-			final int fieldSize = field.getSize();
+			final int fieldSize = fields[i];
 			int stIndex = this.pattern.fieldEndIndexes[i];
 
-			if (field.isConvert()) {
-				final String code = convertToPrint(i, fieldValue);
+			if (conversor != null) {
+				final String code = conversor.convertToString(fieldValue);
 
 				for (int j = fieldSize - 1; j >= 0; j--) {
 					chars[stIndex--] = code.charAt(j);
@@ -114,26 +124,28 @@ public abstract class IntegerFormat<S extends IntegerCode> extends NumericFormat
 		return create(result, new String(chars), fieldValues);
 	}
 
-	protected String print(CodePattern pattern, int value) {
-		char[] chars = pattern.start();
+	protected String print(NumericCodePattern pattern, int value) {
+		char[] chars = pattern.chars();
 		int currentValue = value;
+		int[] sizes = pattern.sizes;
+		NumericConversor[] conversors = pattern.conversors;
 
 		for (int i = this.fieldSizes - 1;  i >= 0; i--) {
 			final int newValue = currentValue / this.masks[i];
 			final int fieldValue = currentValue - (newValue * this.masks[i]);
-			final FieldInfo field = this.fields[i];
+			final NumericConversor conversor = conversors[i];
 			int stIndex = pattern.fieldEndIndexes[i];
 
-			if (field.isConvert()) {
-				final String fieldCode = convertToPrint(i, fieldValue);
+			if (conversor != null) {
+				final String fieldCode = conversor.convertToString(fieldValue);
 
-				for (int j = field.getSize() - 1; j >= 0; j--) {
+				for (int j = sizes[i] - 1; j >= 0; j--) {
 					chars[stIndex--] = fieldCode.charAt(j);
 				}
 			} else {
 				int currentFieldValue = fieldValue;
 
-				for (int j = field.getSize() - 1; j >= 0; j--) {
+				for (int j = sizes[i] - 1; j >= 0; j--) {
 					int newFieldValue = currentFieldValue / 10;
 					chars[stIndex--] = (char) ('0' + (currentFieldValue - (newFieldValue * 10)));
 					currentFieldValue = newFieldValue;
@@ -158,25 +170,27 @@ public abstract class IntegerFormat<S extends IntegerCode> extends NumericFormat
 
 		int currentValue = value.intValue();
 		int[] split = new int[this.fieldSizes];
-		char[] chars = this.pattern.start();
+		char[] chars = this.pattern.chars();
+		int[] sizes = this.pattern.sizes;
+		NumericConversor[] conversors = ((NumericCodePattern) this.pattern).conversors;
 
 		for (int i = this.fieldSizes - 1;  i >= 0; i--) {
 			final int newValue = currentValue / this.masks[i];
 			final int fieldValue = currentValue - (newValue * this.masks[i]);
 			split[i] = fieldValue;
-			final FieldInfo field = this.fields[i];
+			final NumericConversor conversor = conversors[i];
 			int stIndex = this.pattern.fieldEndIndexes[i];
 
-			if (field.isConvert()) {
-				final String code = convertToPrint(i, fieldValue);
+			if (conversor != null) {
+				final String code = conversor.convertToString(fieldValue);
 
-				for (int j = field.getSize() - 1; j >= 0; j--) {
+				for (int j = sizes[i] - 1; j >= 0; j--) {
 					chars[stIndex--] = code.charAt(j);
 				}
 			} else {
 				int currentFieldValue = fieldValue;
 
-				for (int j = field.getSize() - 1; j >= 0; j--) {
+				for (int j = sizes[i] - 1; j >= 0; j--) {
 					int newFieldValue = currentFieldValue / 10;
 					chars[stIndex--] = (char) ('0' + (currentFieldValue - (newFieldValue * 10)));
 					currentFieldValue = newFieldValue;

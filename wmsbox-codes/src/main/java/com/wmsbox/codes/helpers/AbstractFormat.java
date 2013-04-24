@@ -6,38 +6,30 @@ import com.wmsbox.codes.metainfo.FieldInfo;
 
 public abstract class AbstractFormat<C extends Code> implements CodeFormat<C> {
 
+	protected static final String buildDefaultPattern(FieldInfo[] fields) {
+		final StringBuilder sb = new StringBuilder();
+
+		for (final FieldInfo field : fields) {
+			sb.append("{").append(field.getSize()).append("}");
+		}
+
+		return sb.toString();
+	}
+
 	private final String name;
 	protected final FieldInfo[] fields;
 	protected final int fieldSizes;
 	protected final CodePattern pattern;
 
 	public AbstractFormat(String name, FieldInfo[] fields) {
+		this(name, fields, new CodePattern(buildDefaultPattern(fields)));
+	}
+
+	public AbstractFormat(String name, FieldInfo[] fields, CodePattern pattern) {
 		this.name = name;
 		this.fields = fields;
 		this.fieldSizes = fields.length;
-
-		int toStringLength = 0;
-
-		for (int i = 0; i < this.fieldSizes; i++) {
-			toStringLength += this.fields[i].getSize();
-		}
-
-		char[] pattern = new char[toStringLength];
-		int[] fieldEndIndexes = new int[this.fieldSizes];
-		int toStringIndex = 0;
-
-		for (int i = 0; i < this.fieldSizes; i++) {
-			final FieldInfo field = this.fields[i];
-			final int size = field.getSize();
-
-			for (int k = 0; k < size; k++) {
-				pattern[toStringIndex++] = ' ';
-			}
-
-			fieldEndIndexes[i] = toStringIndex - 1;
-		}
-
-		this.pattern = new CodePattern(pattern, fieldEndIndexes);
+		this.pattern = pattern;
 	}
 
 	public String getName() {
@@ -61,7 +53,7 @@ public abstract class AbstractFormat<C extends Code> implements CodeFormat<C> {
 	protected C parseWithOutException(String text) {
 		return parse(this.pattern, text, true);
 	}
-	
+
 	public int[] getAcceptedLengths() {
 		return new int[] { this.pattern.length };
 	}

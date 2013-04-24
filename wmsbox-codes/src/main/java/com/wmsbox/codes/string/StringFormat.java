@@ -19,7 +19,7 @@ public abstract class StringFormat<S extends StringCode> extends AbstractFormat<
 			char[] fixChars = pattern.fixChars;
 			String[] split = new String[this.fieldSizes];
 			int fieldIndex = 0;
-			char[] toString = calculateText ? this.pattern.start() : null;
+			char[] toString = calculateText ? this.pattern.chars() : null;
 			int toStringIndex = 0;
 
 			for (int i = 0; i < length; i++) {

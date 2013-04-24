@@ -6,10 +6,13 @@ import java.lang.reflect.Constructor;
 import com.wmsbox.codes.Code;
 import com.wmsbox.codes.Size;
 import com.wmsbox.codes.metainfo.FieldInfo;
+import com.wmsbox.codes.metainfo.NumericFieldInfo;
+import com.wmsbox.codes.numeric.NumericFormat;
 
 public class FieldsExtractor {
 
 	public static <C extends Code> FieldInfo[] extract(Class<C> codeType) {
+		final boolean numeric = NumericFormat.class.isAssignableFrom(codeType);
 		final Constructor<?>[] constructors = codeType.getDeclaredConstructors();
 
 		if (constructors.length != 1) {
@@ -44,7 +47,11 @@ public class FieldsExtractor {
 						+ " not have size");
 			}
 
-			infos[i] = new FieldInfo(size, false);
+			if (numeric) {
+				infos[i] = new FieldInfo(size);
+			} else {
+				infos[i] = new NumericFieldInfo(size, -1, -1);
+			}
 		}
 
 		return infos;

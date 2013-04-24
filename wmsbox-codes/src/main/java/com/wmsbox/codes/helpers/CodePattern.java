@@ -12,19 +12,14 @@ public class CodePattern {
 	public final int length;
 	public final char[] fixChars;
 	public final int[] fieldEndIndexes;
+	public final int[] sizes;
 	private final char[] pattern;
-
-	public CodePattern(char[] pattern, int[] fieldEndIndexes) {
-		this.pattern = pattern;
-		this.fixChars = new char[pattern.length];
-		this.length = pattern.length;
-		this.fieldEndIndexes = fieldEndIndexes;
-	}
 
 	public CodePattern(String pattern) {
 		final StringBuilder sbPattern = new StringBuilder();
 		final List<Character> fixChars = new ArrayList<Character>();
 		final List<Integer> fieldEndIndexes = new ArrayList<Integer>();
+		final List<Integer> sizes = new ArrayList<Integer>();
 		int beginField = -1;
 
 		for (int i = 0; i < pattern.length(); i++) {
@@ -33,6 +28,7 @@ public class CodePattern {
 			if (beginField != -1) {
 				if (ch == '}') {
 					final int size = Integer.parseInt(pattern.substring(beginField, i));
+					sizes.add(size);
 
 					for (int j = 0; j < size; j++) {
 						sbPattern.append(' ');
@@ -68,9 +64,15 @@ public class CodePattern {
 		for (int i = 0; i < fieldEndIndexes.size(); i++) {
 			this.fieldEndIndexes[i] = fieldEndIndexes.get(i);
 		}
+
+		this.sizes = new int[sizes.size()];
+
+		for (int i = 0; i < sizes.size(); i++) {
+			this.sizes[i] = sizes.get(i);
+		}
 	}
 
-	public char[] start() {
+	public char[] chars() {
 		char[] chars = new char[this.length];
 		System.arraycopy(this.pattern, 0, chars, 0, this.length);
 

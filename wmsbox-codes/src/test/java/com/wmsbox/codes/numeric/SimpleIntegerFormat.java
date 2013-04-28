@@ -1,13 +1,10 @@
 package com.wmsbox.codes.numeric;
 
-import com.wmsbox.codes.helpers.FieldsExtractor;
-import com.wmsbox.codes.helpers.NumericCodePattern;
 
 public class SimpleIntegerFormat extends IntegerFormat<SimpleIntegerCode> {
 
 	public SimpleIntegerFormat() {
-		super("SimpleInteger", FieldsExtractor.extract(SimpleLongCode.class),
-				 new NumericCodePattern("CO{3}{1}/{2}>"));
+		super("SimpleInteger", SimpleIntegerCode.class, "'CO'AAAB'/'CC'>'");
 	}
 
 	@Override

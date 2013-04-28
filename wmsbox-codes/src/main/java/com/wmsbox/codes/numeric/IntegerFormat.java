@@ -3,85 +3,54 @@ package com.wmsbox.codes.numeric;
 import com.wmsbox.codes.helpers.CodePattern;
 import com.wmsbox.codes.helpers.NumericCodePattern;
 import com.wmsbox.codes.metainfo.FieldInfo;
-import com.wmsbox.codes.metainfo.NumericConversor;
 
-public abstract class IntegerFormat<S extends IntegerCode> extends NumericFormat<S, Integer> {
+public abstract class IntegerFormat<C extends IntegerCode<C>> extends NumericFormat<C, Integer> {
 
 	private final int maxValue;
 
-	public IntegerFormat(String name, FieldInfo[] fields) {
-		super(name, fields);
+	public IntegerFormat(String name, Class<C> codeType) {
+		super(name, codeType);
 		this.maxValue = (int) (Math.pow(10, this.digits)) - 1;
 	}
 
-	public IntegerFormat(String name, FieldInfo[] fields, NumericCodePattern pattern) {
-		super(name, fields, pattern);
+	public IntegerFormat(String name, Class<C> codeType, String pattern) {
+		super(name, codeType, pattern);
+		this.maxValue = (int) (Math.pow(10, this.digits)) - 1;
+	}
+
+	public IntegerFormat(String name, Class<C> codeType, String pattern,
+			NumericConversor conversor) {
+		super(name, codeType, pattern, conversor);
+		this.maxValue = (int) (Math.pow(10, this.digits)) - 1;
+	}
+
+	public IntegerFormat(String name, FieldInfo[] fields, String pattern,
+			NumericConversor conversor) {
+		super(name, fields, pattern, conversor);
 		this.maxValue = (int) (Math.pow(10, this.digits)) - 1;
 	}
 
 	@Override
-	protected S parse(CodePattern pattern, String text, boolean calculateText) {
+	protected C parse(CodePattern pattern, String text, boolean calculateText) {
 		final int length = text.length();
 
 		if (length == pattern.length) {
-			int value = 0;
-			int[] split = new int[this.fieldSizes];
-			int[] sizes = pattern.sizes;
-			NumericConversor[] conversors = ((NumericCodePattern) pattern).conversors;
-			int fieldSize = sizes[0];
-			NumericConversor conversor = conversors[0];
-			int inFieldIndex = 0;
-			int fieldIndex = 0;
-			int beginIndex = -1;
-			int fieldValue = 0;
-			char[] fixChars = pattern.fixChars;
+			int[] split = ((NumericCodePattern) pattern).parse(text);
 
-			for (int i = 0; i < length; i++) {
-				final char ch = text.charAt(i);
-				final char fixChar = fixChars[i];
+			int result = 0;
 
-				if (fixChar != 0) {
-					if (fixChar != ch) {
-						throw new IllegalArgumentException("Invalid code " + text);
-					}
-				} else {
-					if (conversor != null) {
-						if (beginIndex == -1) {
-							beginIndex = i;
-						}
-					} else if (ch >= '0' && ch <= '9') {
-						fieldValue = fieldValue * 10 + (ch - '0');
-					} else {
-						throw new IllegalArgumentException("Invalid code " + text);
-					}
-
-					if (++inFieldIndex == fieldSize) {
-						if (beginIndex != -1) {
-							fieldValue = conversors[i].convertToInt(text.substring(beginIndex, i + 1));
-							beginIndex = -1;
-						}
-
-						value = value * this.masks[fieldIndex] + fieldValue;
-						split[fieldIndex++] = fieldValue;
-
-						if (fieldIndex < this.fieldSizes) {
-							fieldSize = sizes[fieldIndex];
-							conversor = conversors[fieldIndex];
-							inFieldIndex = 0;
-							fieldValue = 0;
-						}
-					}
-				}
+			for (int i = 0; i < this.fieldSizes; i++) {
+				result = result * this.masks[i] + split[i];
 			}
 
-			return create(value, calculateText
-					? print((NumericCodePattern) this.pattern, value) : text, split);
+			return create(result, calculateText ? ((NumericCodePattern) this.pattern).print(split)
+					: text, split);
 		}
 
 		return null;
 	}
 
-	protected S create(final int[] fieldValues) {
+	public C create(final int[] fieldValues) {
 		if (fieldValues == null) {
 			throw new IllegalArgumentException("Null value");
 		}
@@ -90,76 +59,34 @@ public abstract class IntegerFormat<S extends IntegerCode> extends NumericFormat
 			throw new IllegalArgumentException("Invalid fields number " + fieldValues.length);
 		}
 
-		char[] chars = this.pattern.chars();
-		int[] fields = this.pattern.sizes;
-		NumericConversor[] conversors = ((NumericCodePattern) this.pattern).conversors;
-
 		int result = 0;
 
 		for (int i = 0; i < this.fieldSizes; i++) {
-			final NumericConversor conversor = conversors[i];
-			final int fieldValue = fieldValues[i];
-			final int fieldSize = fields[i];
-			int stIndex = this.pattern.fieldEndIndexes[i];
-
-			if (conversor != null) {
-				final String code = conversor.convertToString(fieldValue);
-
-				for (int j = fieldSize - 1; j >= 0; j--) {
-					chars[stIndex--] = code.charAt(j);
-				}
-			} else {
-				int currentFieldValue = fieldValue;
-
-				for (int j = fieldSize - 1; j >= 0; j--) {
-					int newFieldValue = currentFieldValue / 10;
-					chars[stIndex--] = (char) ('0' + (currentFieldValue - (newFieldValue * 10)));
-					currentFieldValue = newFieldValue;
-				}
-			}
-
-			result = result * this.masks[i] + fieldValue;
+			result = result * this.masks[i] + fieldValues[i];
 		}
 
-		return create(result, new String(chars), fieldValues);
+		return create(result, ((NumericCodePattern) this.pattern).print(fieldValues), fieldValues);
 	}
 
-	protected String print(NumericCodePattern pattern, int value) {
-		char[] chars = pattern.chars();
-		int currentValue = value;
-		int[] sizes = pattern.sizes;
-		NumericConversor[] conversors = pattern.conversors;
+	private int[] split(int value) {
+		int[] split = new int[this.fieldSizes];
+		long currentValue = value;
 
 		for (int i = this.fieldSizes - 1;  i >= 0; i--) {
-			final int newValue = currentValue / this.masks[i];
-			final int fieldValue = currentValue - (newValue * this.masks[i]);
-			final NumericConversor conversor = conversors[i];
-			int stIndex = pattern.fieldEndIndexes[i];
-
-			if (conversor != null) {
-				final String fieldCode = conversor.convertToString(fieldValue);
-
-				for (int j = sizes[i] - 1; j >= 0; j--) {
-					chars[stIndex--] = fieldCode.charAt(j);
-				}
-			} else {
-				int currentFieldValue = fieldValue;
-
-				for (int j = sizes[i] - 1; j >= 0; j--) {
-					int newFieldValue = currentFieldValue / 10;
-					chars[stIndex--] = (char) ('0' + (currentFieldValue - (newFieldValue * 10)));
-					currentFieldValue = newFieldValue;
-				}
-			}
-
+			final long newValue = currentValue / this.masks[i];
+			split[i] = (int) (currentValue - (newValue * this.masks[i]));
 			currentValue = newValue;
 		}
 
-		return new String(chars);
+		return split;
+	}
+
+	protected String print(NumericCodePattern pattern, int value) {
+		return pattern.print(split(value));
 	}
 
 	@Override
-	public S create(final Integer value) {
+	public C create(final Integer value) {
 		if (value == null) {
 			throw new IllegalArgumentException("Null value");
 		}
@@ -168,40 +95,10 @@ public abstract class IntegerFormat<S extends IntegerCode> extends NumericFormat
 			throw new IllegalArgumentException("Invalid code " + value);
 		}
 
-		int currentValue = value.intValue();
-		int[] split = new int[this.fieldSizes];
-		char[] chars = this.pattern.chars();
-		int[] sizes = this.pattern.sizes;
-		NumericConversor[] conversors = ((NumericCodePattern) this.pattern).conversors;
+		int[] split = split(value);
 
-		for (int i = this.fieldSizes - 1;  i >= 0; i--) {
-			final int newValue = currentValue / this.masks[i];
-			final int fieldValue = currentValue - (newValue * this.masks[i]);
-			split[i] = fieldValue;
-			final NumericConversor conversor = conversors[i];
-			int stIndex = this.pattern.fieldEndIndexes[i];
-
-			if (conversor != null) {
-				final String code = conversor.convertToString(fieldValue);
-
-				for (int j = sizes[i] - 1; j >= 0; j--) {
-					chars[stIndex--] = code.charAt(j);
-				}
-			} else {
-				int currentFieldValue = fieldValue;
-
-				for (int j = sizes[i] - 1; j >= 0; j--) {
-					int newFieldValue = currentFieldValue / 10;
-					chars[stIndex--] = (char) ('0' + (currentFieldValue - (newFieldValue * 10)));
-					currentFieldValue = newFieldValue;
-				}
-			}
-
-			currentValue = newValue;
-		}
-
-		return create(value, new String(chars), split);
+		return create(value, ((NumericCodePattern) this.pattern).print(split), split);
 	}
 
-	protected abstract S create(int value, String toString, int[] values);
+	protected abstract C create(int value, String toString, int[] values);
 }

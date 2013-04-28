@@ -4,7 +4,7 @@ import com.wmsbox.codes.helpers.AbstractFormat;
 import com.wmsbox.codes.helpers.CodePattern;
 import com.wmsbox.codes.metainfo.FieldInfo;
 
-public abstract class StringFormat<S extends StringCode> extends AbstractFormat<S> {
+public abstract class StringFormat<C extends StringCode<C>> extends AbstractFormat<C> {
 
 	//TODO otro patron distinto.
 	public StringFormat(String name, FieldInfo[] fields) {
@@ -12,7 +12,7 @@ public abstract class StringFormat<S extends StringCode> extends AbstractFormat<
 	}
 
 	@Override
-	protected S parse(CodePattern pattern, String text, boolean calculateText) {
+	protected C parse(CodePattern pattern, String text, boolean calculateText) {
 		final int length = text.length();
 
 		if (length == pattern.length) {
@@ -31,8 +31,7 @@ public abstract class StringFormat<S extends StringCode> extends AbstractFormat<
 						throw new IllegalArgumentException("Invalid code " + text);
 					}
 				} else {
-					final FieldInfo field = this.fields[fieldIndex];
-					final int fieldSize = field.getSize();
+					final int fieldSize = pattern.sizes[fieldIndex];
 					final String fieldValue = text.substring(i, i += fieldSize - 1);
 					split[fieldIndex++] = fieldValue;
 
@@ -50,13 +49,5 @@ public abstract class StringFormat<S extends StringCode> extends AbstractFormat<
 		return null;
 	}
 
-	protected abstract S create(String toString, String[] values);
-
-	protected String convertToValue(int fieldIndex, String fieldValue) {
-		throw new UnsupportedOperationException();
-	}
-
-	protected String convertToPrint(int fieldIndex, String fieldValue) {
-		throw new UnsupportedOperationException();
-	}
+	protected abstract C create(String toString, String[] values);
 }

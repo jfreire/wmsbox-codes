@@ -2,8 +2,8 @@ package com.wmsbox.codes.string;
 
 import com.wmsbox.codes.Size;
 
-public class SimpleStringCode extends StringCode {
-	
+public class SimpleStringCode extends StringCode<SimpleStringCode> {
+
 	private static final long serialVersionUID = 3194500462299404465L;
 
 	private final String field1;

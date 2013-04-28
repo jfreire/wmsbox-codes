@@ -1,16 +1,16 @@
 package com.wmsbox.codes.speed;
 
+import com.wmsbox.codes.Name;
 import com.wmsbox.codes.Size;
-import com.wmsbox.codes.helpers.FieldsExtractor;
 import com.wmsbox.codes.numeric.LongCode;
 import com.wmsbox.codes.numeric.LongFormat;
 
-public class ToTestCode extends LongCode {
+public class ToTestCode extends LongCode<ToTestCode> {
 
 	private static final long serialVersionUID = -4211060913181189437L;
 
 	public static LongFormat<ToTestCode> FORMAT = new LongFormat<ToTestCode>("TestFormat",
-			FieldsExtractor.extract(ToTestCode.class)) {
+			ToTestCode.class) {
 
 		@Override
 		protected ToTestCode create(long value, String toString,
@@ -33,8 +33,12 @@ public class ToTestCode extends LongCode {
 	private final int field6;
 
 	protected ToTestCode(long value, String string,
-			@Size(5) int field1, @Size(4) int field2, @Size(3) int field3,
-			@Size(3) int field4, @Size(2) int field5, @Size(2) int field6) {
+			@Name('A') @Size(5) int field1,
+			@Name('B') @Size(4) int field2,
+			@Name('C') @Size(3) int field3,
+			@Name('D') @Size(3) int field4,
+			@Name('E') @Size(2) int field5,
+			@Name('F') @Size(2) int field6) {
 		super(value, string);
 		this.field1 = field1;
 		this.field2 = field2;

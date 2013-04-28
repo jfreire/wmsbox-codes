@@ -9,7 +9,7 @@ package com.wmsbox.codes.speed;
 //5000000 en casa
 //Ref  58641ms
 //Ref2  7875ms
-//Codes 6486ms
+//Codes 5681ms
 
 public class SpeedTest {
 
@@ -17,10 +17,10 @@ public class SpeedTest {
 		long time = System.currentTimeMillis();
 
 		for (int i = 0; i < 5000000; i++) {
-			RefCode refCode = new RefCode(i % 1000, 1, 1, 1, 1, 1);
-			RefCode.parse(refCode.toString());
-//			RefCode2 refCode2 = new RefCode2(i % 1000, 1, 1, 1, 1, 1);
-//			RefCode2.parse(refCode2.toString());
+//			RefCode refCode = new RefCode(i % 1000, 1, 1, 1, 1, 1);
+//			RefCode.parse(refCode.toString());
+			RefCode2 refCode2 = new RefCode2(i % 1000, 1, 1, 1, 1, 1);
+			RefCode2.parse(refCode2.toString());
 //			ToTestCode code = ToTestCode.create(i % 1000, 1, 1, 1, 1, 1);
 //			ToTestCode.FORMAT.parse(code.toString());
 		}

@@ -1,8 +1,9 @@
 package com.wmsbox.codes.numeric;
 
+import com.wmsbox.codes.Name;
 import com.wmsbox.codes.Size;
 
-public class SimpleIntegerCode extends IntegerCode {
+public class SimpleIntegerCode extends IntegerCode<SimpleIntegerCode> {
 
 	private static final long serialVersionUID = -4211060913181189437L;
 
@@ -11,7 +12,9 @@ public class SimpleIntegerCode extends IntegerCode {
 	private final int field3;
 
 	protected SimpleIntegerCode(int value, String string,
-			@Size(3) int field1, @Size(1) int field2, @Size(2) int field3) {
+			@Name('A') @Size(3) int field1,
+			@Name('B') @Size(1) int field2,
+			@Name('C') @Size(2) int field3) {
 		super(value, string);
 		this.field1 = field1;
 		this.field2 = field2;

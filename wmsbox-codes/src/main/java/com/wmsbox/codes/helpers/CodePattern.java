@@ -3,73 +3,116 @@ package com.wmsbox.codes.helpers;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.wmsbox.codes.metainfo.FieldInfo;
+
 /**
- * {4}-{2}
+ * AAA'A'{ZZ}II
+ * Entre comillas literal
+ * La \ escapa
+ *
+ * String: No acepta llaves. Chequea que el tamaño del campo sea mayor que size.??
+ *
+ * Numerico: Entre llaves es conversor y chequea max min si no hay conversion
+ *
  * @author jfreire
  */
 public class CodePattern {
 
-	public final int length;
-	public final char[] fixChars;
-	public final int[] fieldEndIndexes;
-	public final int[] sizes;
-	private final char[] pattern;
+	public static CodePattern build(String patternText, FieldInfo[] fields) {
+		final int length = patternText.length();
+		final StringBuffer pattern = new StringBuffer();
+		final List<Character> fixCharsList = new ArrayList<Character>();
+		final int[] fieldEndIndexes = new int[fields.length];
+		final int[] indexes = new int[fields.length]; //El indice del campo
+		final int[] sizes = new int[fields.length];
 
-	public CodePattern(String pattern) {
-		final StringBuilder sbPattern = new StringBuilder();
-		final List<Character> fixChars = new ArrayList<Character>();
-		final List<Integer> fieldEndIndexes = new ArrayList<Integer>();
-		final List<Integer> sizes = new ArrayList<Integer>();
-		int beginField = -1;
+		Character lastFieldName = null;
+		boolean literal = false;
+		int size = 0;
+		int field = 0;
 
-		for (int i = 0; i < pattern.length(); i++) {
-			final char ch = pattern.charAt(i);
+		for (int i = 0; i < length; i++) {
+			final char ch = patternText.charAt(i);
 
-			if (beginField != -1) {
-				if (ch == '}') {
-					final int size = Integer.parseInt(pattern.substring(beginField, i));
-					sizes.add(size);
+			if (ch == '\'') {
+				literal = !literal;
 
-					for (int j = 0; j < size; j++) {
-						sbPattern.append(' ');
-						fixChars.add(null);
-					}
-
-					fieldEndIndexes.add(sbPattern.length() - 1);
-					beginField = -1;
-				} else if (!Character.isDigit(ch)) {
-					throw new IllegalArgumentException("Invalid pattern: " + pattern);
+				if (literal && lastFieldName != null) {
+					fieldEndIndexes[field] = pattern.length() - 1;
+					sizes[field++] = size;
+					size = 0;
+					lastFieldName = null;
 				}
 			} else {
-				if (ch == '{') {
-					beginField = i + 1;
+				if (literal) {
+					fixCharsList.add(ch);
+					pattern.append(ch);
 				} else {
-					sbPattern.append(ch);
-					fixChars.add(ch);
+					if (lastFieldName == null || lastFieldName != ch) {
+						if (lastFieldName != null) {
+							fieldEndIndexes[field] = pattern.length() - 1;
+							sizes[field++] = size;
+							size = 0;
+							lastFieldName = null;
+						}
+
+						Integer index = null;
+
+						for (int j = 0; index == null && j < fields.length; j++) {
+							if (fields[j].getName().equals(ch)) {
+								index = j;
+							}
+						}
+
+						if (index == null) {
+							throw new IllegalArgumentException("Field not found " + ch);
+						}
+
+						indexes[field] = index;
+						lastFieldName = ch;
+					}
+
+					fixCharsList.add(null);
+					pattern.append(ch);
+					size++;
 				}
 			}
 		}
 
-		this.length = sbPattern.length();
-		this.pattern = sbPattern.toString().toCharArray();
-		this.fixChars = new char[this.length];
-
-		for (int i = 0; i < this.length; i++) {
-			Character ch = fixChars.get(i);
-			this.fixChars[i] = ch == null ? 0 : ch;
+		if (lastFieldName != null) {
+			fieldEndIndexes[field] = pattern.length() - 1;
+			sizes[field++] = size;
+			size = 0;
 		}
 
-		this.fieldEndIndexes = new int[fieldEndIndexes.size()];
+		char[] fixChars = new char[fixCharsList.size()];
 
-		for (int i = 0; i < fieldEndIndexes.size(); i++) {
-			this.fieldEndIndexes[i] = fieldEndIndexes.get(i);
+		for (int i = 0; i < fixCharsList.size(); i++) {
+			Character ch = fixCharsList.get(i);
+			fixChars[i] = ch == null ? 0 : ch;
 		}
 
-		this.sizes = new int[sizes.size()];
+		return new CodePattern(pattern.toString().toCharArray(), fixChars, sizes,
+				fieldEndIndexes, indexes);
+	}
 
-		for (int i = 0; i < sizes.size(); i++) {
-			this.sizes[i] = sizes.get(i);
-		}
+	public final int length;
+	protected final int fields;
+	public final char[] fixChars;
+	public final int[] fieldEndIndexes;
+	public final int[] sizes;
+	public final int[] indexes;
+	private final char[] pattern;
+
+	public CodePattern(char[] pattern, char[] fixChars, int[] sizes, int[] fieldEndIndexes,
+			int[] indexes) {
+		this.fields = sizes.length;
+		this.pattern = pattern;
+		this.fixChars = fixChars;
+		this.sizes = sizes;
+		this.fieldEndIndexes = fieldEndIndexes;
+		this.length = this.pattern.length;
+		this.indexes = indexes;
 	}
 
 	public char[] chars() {

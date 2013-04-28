@@ -2,7 +2,7 @@ package com.wmsbox.codes.numeric;
 
 import com.wmsbox.codes.Code;
 
-public abstract class IntegerCode implements Code {
+public abstract class IntegerCode<C extends IntegerCode<C>> implements Code<C> {
 
 	private static final long serialVersionUID = 2599444396227804816L;
 
@@ -14,9 +14,10 @@ public abstract class IntegerCode implements Code {
 		this.string = string;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public boolean equals(Object obj) {
-		return obj.getClass() == getClass() && ((IntegerCode) obj).value == this.value;
+		return obj.getClass() == getClass() && ((IntegerCode<C>) obj).value == this.value;
 	}
 
 	@Override
@@ -35,5 +36,9 @@ public abstract class IntegerCode implements Code {
 	 */
 	public int intValue() {
 		return this.value;
+	}
+
+	public int compareTo(C other) {
+		return (this.value < other.value) ? -1 : ((this.value == other.value) ? 0 : 1);
 	}
 }

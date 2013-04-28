@@ -1,6 +1,5 @@
 package com.wmsbox.codes.numeric;
 
-import com.wmsbox.codes.helpers.FieldsExtractor;
 import com.wmsbox.codes.helpers.NumericCodePattern;
 
 public class SimpleLongCodeFormat extends LongFormat<SimpleLongCode> {
@@ -8,8 +7,8 @@ public class SimpleLongCodeFormat extends LongFormat<SimpleLongCode> {
 	private final NumericCodePattern prettyPattern;
 
 	public SimpleLongCodeFormat() {
-		super("SimpleLong", FieldsExtractor.extract(SimpleLongCode.class));
-		this.prettyPattern = new NumericCodePattern("{3}-{1}.{2}");
+		super("SimpleLong", SimpleLongCode.class);
+		this.prettyPattern = NumericCodePattern.build("AAA'-'B'.'CC", this.fields);
 	}
 
 	@Override

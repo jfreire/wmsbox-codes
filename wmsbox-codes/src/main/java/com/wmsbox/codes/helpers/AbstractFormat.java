@@ -4,32 +4,36 @@ import com.wmsbox.codes.Code;
 import com.wmsbox.codes.CodeFormat;
 import com.wmsbox.codes.metainfo.FieldInfo;
 
-public abstract class AbstractFormat<C extends Code> implements CodeFormat<C> {
+public abstract class AbstractFormat<C extends Code<C>> implements CodeFormat<C> {
 
-	protected static final String buildDefaultPattern(FieldInfo[] fields) {
-		final StringBuilder sb = new StringBuilder();
+	private static final CodePattern buildPattern(FieldInfo[] fields) {
+		StringBuilder builder = new StringBuilder();
 
 		for (final FieldInfo field : fields) {
-			sb.append("{").append(field.getSize()).append("}");
+			char name = field.getName();
+
+			for (int i = 0; i < field.getSize(); i++) {
+				builder.append(name);
+			}
 		}
 
-		return sb.toString();
+		return CodePattern.build(builder.toString(), fields);
 	}
 
 	private final String name;
-	protected final FieldInfo[] fields;
 	protected final int fieldSizes;
 	protected final CodePattern pattern;
-
-	public AbstractFormat(String name, FieldInfo[] fields) {
-		this(name, fields, new CodePattern(buildDefaultPattern(fields)));
-	}
+	protected FieldInfo[] fields;
 
 	public AbstractFormat(String name, FieldInfo[] fields, CodePattern pattern) {
 		this.name = name;
-		this.fields = fields;
 		this.fieldSizes = fields.length;
-		this.pattern = pattern;
+		this.pattern = pattern == null ? buildPattern(fields) : pattern;
+		this.fields = fields;
+	}
+
+	public AbstractFormat(String name, FieldInfo[] fields) {
+		this(name, fields, null);
 	}
 
 	public String getName() {

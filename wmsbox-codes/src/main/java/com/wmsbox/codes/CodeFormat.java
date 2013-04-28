@@ -1,6 +1,6 @@
 package com.wmsbox.codes;
 
-public interface CodeFormat<C extends Code> {
+public interface CodeFormat<C extends Code<C>> {
 
 	String getName();
 

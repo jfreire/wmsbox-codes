@@ -20,17 +20,18 @@ public class DefaultCodesManager implements CodesManager {
 	}
 
 	@SuppressWarnings("unchecked")
-	public <C extends Code, F extends CodeFormat<C>> F find(Class<F> formatType) {
+	public <C extends Code<C>, F extends CodeFormat<C>> F find(Class<F> formatType) {
 		return (F) this.formatsByType.get(formatType);
 	}
 
-	public Code parse(String code) {
+	@SuppressWarnings("unchecked")
+	public <C extends Code<C>> C parse(String code) {
 		List<CodeFormat<?>> formats = this.formatsByCodeLength.get(code.length());
 
 		if (formats != null) {
 			for (CodeFormat<?> format : formats) {
 				try {
-					return format.parse(code);
+					return (C) format.parse(code);
 				} catch (IllegalArgumentException e) {
 					return null;
 				}
@@ -41,7 +42,7 @@ public class DefaultCodesManager implements CodesManager {
 	}
 
 	@SuppressWarnings("unchecked")
-	public <C extends Code, F extends CodeFormat<C>> void add(F format) {
+	public <C extends Code<C>, F extends CodeFormat<C>> void add(F format) {
 		Class<? extends CodeFormat<?>> type = (Class<? extends CodeFormat<?>>) format.getClass();
 
 		if (this.formatsByType.containsKey(format)) {
@@ -60,10 +61,5 @@ public class DefaultCodesManager implements CodesManager {
 
 			formats.add(format);
 		}
-	}
-
-	public <C extends Code, F extends CodeFormat<C>> F findByCodeType(Class<C> codeType) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 }

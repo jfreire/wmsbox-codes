@@ -3,7 +3,7 @@ package com.wmsbox.codes.numeric;
 import com.wmsbox.codes.Name;
 import com.wmsbox.codes.Size;
 
-public class SimpleLongCode extends LongCode<SimpleLongCode> {
+public class SimpleLongCode extends BaseLongCode<SimpleLongCode> {
 
 	private static final long serialVersionUID = -4211060913181189437L;
 

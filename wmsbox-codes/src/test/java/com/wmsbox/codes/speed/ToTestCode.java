@@ -2,10 +2,10 @@ package com.wmsbox.codes.speed;
 
 import com.wmsbox.codes.Name;
 import com.wmsbox.codes.Size;
-import com.wmsbox.codes.numeric.LongCode;
+import com.wmsbox.codes.numeric.BaseLongCode;
 import com.wmsbox.codes.numeric.LongFormat;
 
-public class ToTestCode extends LongCode<ToTestCode> {
+public class ToTestCode extends BaseLongCode<ToTestCode> {
 
 	private static final long serialVersionUID = -4211060913181189437L;
 

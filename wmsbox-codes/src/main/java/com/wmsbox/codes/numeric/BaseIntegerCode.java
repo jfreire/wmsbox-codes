@@ -1,7 +1,7 @@
 package com.wmsbox.codes.numeric;
 
 
-public abstract class BaseIntegerCode<C extends BaseIntegerCode<C>> implements IntegerCode<C> {
+public abstract class BaseIntegerCode<C extends IntegerCode<C>> implements IntegerCode<C> {
 
 	private static final long serialVersionUID = 2599444396227804816L;
 
@@ -16,7 +16,7 @@ public abstract class BaseIntegerCode<C extends BaseIntegerCode<C>> implements I
 	@SuppressWarnings("unchecked")
 	@Override
 	public boolean equals(Object obj) {
-		return obj.getClass() == getClass() && ((BaseIntegerCode<C>) obj).value == this.value;
+		return obj.getClass() == getClass() && ((IntegerCode<C>) obj).intValue() == this.value;
 	}
 
 	@Override
@@ -38,6 +38,6 @@ public abstract class BaseIntegerCode<C extends BaseIntegerCode<C>> implements I
 	}
 
 	public int compareTo(C other) {
-		return (this.value < other.value) ? -1 : ((this.value == other.value) ? 0 : 1);
+		return (this.value < other.intValue()) ? -1 : ((this.value == other.intValue()) ? 0 : 1);
 	}
 }

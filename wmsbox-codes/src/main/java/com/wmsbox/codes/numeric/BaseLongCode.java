@@ -1,6 +1,6 @@
 package com.wmsbox.codes.numeric;
 
-public abstract class BaseLongCode<C extends BaseLongCode<C>> implements LongCode<C> {
+public abstract class BaseLongCode<C extends LongCode<C>> implements LongCode<C> {
 
 	private static final long serialVersionUID = 2599444396227804816L;
 
@@ -15,7 +15,7 @@ public abstract class BaseLongCode<C extends BaseLongCode<C>> implements LongCod
 	@SuppressWarnings("unchecked")
 	@Override
 	public boolean equals(Object obj) {
-		return obj instanceof BaseLongCode && ((BaseLongCode<C>) obj).value == this.value;
+		return obj.getClass() == getClass() && ((LongCode<C>) obj).longValue() == this.value;
 	}
 
 	@Override
@@ -37,6 +37,6 @@ public abstract class BaseLongCode<C extends BaseLongCode<C>> implements LongCod
 	}
 
 	public int compareTo(C other) {
-		return (this.value < other.value) ? -1 : ((this.value == other.value) ? 0 : 1);
+		return (this.value < other.longValue()) ? -1 : ((this.value == other.longValue()) ? 0 : 1);
 	}
 }

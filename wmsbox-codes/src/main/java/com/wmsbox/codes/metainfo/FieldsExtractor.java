@@ -47,7 +47,7 @@ public class FieldsExtractor {
 							+ " have an invalid name " + name);
 				}
 
-				infos.add(new FieldInfo(name, size));
+				infos.add(new FieldInfo(name, size, types[i]));
 			}
 		}
 

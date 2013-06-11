@@ -3,12 +3,38 @@ package com.wmsbox.codes.string;
 import com.wmsbox.codes.helpers.AbstractFormat;
 import com.wmsbox.codes.helpers.CodePattern;
 import com.wmsbox.codes.metainfo.FieldInfo;
+import com.wmsbox.codes.metainfo.FieldsExtractor;
 
 public abstract class StringFormat<C extends StringCode<C>> extends AbstractFormat<C> {
 
-	//TODO otro patron distinto.
-	public StringFormat(String name, FieldInfo[] fields) {
-		super(name, fields);
+	private static final CodePattern buildPattern(FieldInfo[] fields) {
+		StringBuilder builder = new StringBuilder();
+
+		for (final FieldInfo field : fields) {
+			char name = field.getName();
+
+			for (int i = 0; i < field.getSize(); i++) {
+				builder.append(name);
+			}
+		}
+
+		return CodePattern.build(builder.toString(), fields);
+	}
+
+	public StringFormat(String name, Class<C> codeType) {
+		this(name, FieldsExtractor.extract(codeType), (CodePattern) null);
+	}
+
+	public StringFormat(String name, Class<C> codeType, String pattern) {
+		this(name, FieldsExtractor.extract(codeType), pattern);
+	}
+
+	public StringFormat(String name, FieldInfo[] fields, String pattern) {
+		super(name, fields, CodePattern.build(pattern, fields));
+	}
+
+	public StringFormat(String name, FieldInfo[] fields, CodePattern pattern) {
+		super(name, fields, pattern == null ? buildPattern(fields) : pattern);
 	}
 
 	@Override
@@ -17,10 +43,12 @@ public abstract class StringFormat<C extends StringCode<C>> extends AbstractForm
 
 		if (length == pattern.length) {
 			char[] fixChars = pattern.fixChars;
-			String[] split = new String[this.fieldSizes];
+			Object[] split = new Object[this.fieldSizes];
+			int fieldSize = pattern.sizes[0];
+			boolean numericField = this.fields[0].isNumeric();
+			int inFieldIndex = 0;
 			int fieldIndex = 0;
-			char[] toString = calculateText ? this.pattern.chars() : null;
-			int toStringIndex = 0;
+			long numericFieldValue = 0;
 
 			for (int i = 0; i < length; i++) {
 				final char ch = text.charAt(i);
@@ -31,23 +59,50 @@ public abstract class StringFormat<C extends StringCode<C>> extends AbstractForm
 						throw new IllegalArgumentException("Invalid code " + text);
 					}
 				} else {
-					final int fieldSize = pattern.sizes[fieldIndex];
-					final String fieldValue = text.substring(i, i += fieldSize - 1);
-					split[fieldIndex++] = fieldValue;
+					if (numericField) {
+						if (ch >= '0' && ch <= '9') {
+							numericFieldValue = numericFieldValue * 10 + (ch - '0');
+						} else {
+							throw new IllegalArgumentException("Invalid code " + text);
+						}
+					}
 
-					if (calculateText) {
-						for (int j = 0; j < fieldSize; j++) {
-							toString[toStringIndex++] = fieldValue.charAt(j);
+					if (++inFieldIndex == fieldSize) {
+						final Object fieldValue;
+
+						if (numericField) {
+							final Class<?> type = this.fields[fieldIndex].getType();
+
+							if (type == Integer.class || type == Integer.TYPE) {
+								fieldValue = (int) numericFieldValue;
+							} else {
+								fieldValue = null; //TODO
+							}
+						} else {
+							fieldValue = text.substring(i - fieldSize + 1, i + 1);
+						}
+						System.out.println("----- " + text + " - " + fieldIndex + " - " + fieldValue);
+						split[fieldIndex++] = fieldValue;
+
+						if (fieldIndex < this.fieldSizes) {
+							numericField = this.fields[fieldIndex].isNumeric();
+							fieldSize = pattern.sizes[fieldIndex];
+							inFieldIndex = 0;
+							numericFieldValue = 0;
 						}
 					}
 				}
 			}
 
-			return create(calculateText ? new String(toString) : text, split);
+			return create(calculateText ? this.pattern.print(split) : text, split);
 		}
 
 		return null;
 	}
 
-	protected abstract C create(String toString, String[] values);
+	protected C create(Object[] values) {
+		return create(this.pattern.print(values), values);
+	}
+
+	protected abstract C create(String toString, Object[] values);
 }

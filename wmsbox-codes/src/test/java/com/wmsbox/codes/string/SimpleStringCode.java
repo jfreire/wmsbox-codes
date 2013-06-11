@@ -1,5 +1,6 @@
 package com.wmsbox.codes.string;
 
+import com.wmsbox.codes.Name;
 import com.wmsbox.codes.Size;
 
 public class SimpleStringCode extends StringCode<SimpleStringCode> {
@@ -11,7 +12,9 @@ public class SimpleStringCode extends StringCode<SimpleStringCode> {
 	private final String field3;
 
 	protected SimpleStringCode(String string,
-			@Size(3) String field1, @Size(1) int field2, @Size(2) String field3) {
+			@Name('A') @Size(3) String field1,
+			@Name('B') @Size(2) int field2,
+			@Name('C') @Size(2) String field3) {
 		super(string);
 		this.field1 = field1;
 		this.field2 = field2;

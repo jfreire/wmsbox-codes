@@ -121,4 +121,32 @@ public class CodePattern {
 
 		return chars;
 	}
+
+	public String print(Object[] values) {
+		char[] chars = chars();
+
+		for (int i = this.fields - 1;  i >= 0; i--) {
+			final Object fieldValue = values[i];
+			int stIndex = this.fieldEndIndexes[i];
+
+			if (fieldValue instanceof String) {
+				String value = (String) fieldValue;
+				int size = value.length();
+
+				for (int j = this.sizes[i] - 1; j >= 0; j--) {
+					chars[stIndex--] = j < size ? value.charAt(j) : ' ';
+				}
+			} else {
+				long currentFieldValue = ((Number) fieldValue).longValue();
+
+				for (int j = this.sizes[i] - 1; j >= 0; j--) {
+					long newFieldValue = currentFieldValue / 10;
+					chars[stIndex--] = (char) ('0' + (currentFieldValue - (newFieldValue * 10)));
+					currentFieldValue = newFieldValue;
+				}
+			}
+		}
+
+		return new String(chars);
+	}
 }

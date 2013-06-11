@@ -1,27 +1,24 @@
 package com.wmsbox.codes.string;
 
 import com.wmsbox.codes.helpers.CodePattern;
-import com.wmsbox.codes.helpers.NumericCodePattern;
-import com.wmsbox.codes.metainfo.FieldsExtractor;
-import com.wmsbox.codes.numeric.SimpleLongCode;
 
 public class SimpleStringCodeFormat extends StringFormat<SimpleStringCode> {
 
 	private final CodePattern prettyPattern;
 
 	public SimpleStringCodeFormat() {
-		super("SimpleLong", FieldsExtractor.extract(SimpleStringCode.class));
-		this.prettyPattern = NumericCodePattern.build("AAA'-'B'.'CC", this.fields);
+		super("SimpleLong", SimpleStringCode.class);
+		this.prettyPattern = CodePattern.build("AAA'-'BB'.'CC", this.fields);
 	}
 
 	@Override
-	protected SimpleStringCode create(String toString, String[] values) {
-		return new SimpleStringCode(toString, values[0], Integer.parseInt(values[1]), values[2]);
+	protected SimpleStringCode create(String toString, Object[] values) {
+		return new SimpleStringCode(toString, ((String) values[0]).trim(),
+				((Number) values[1]).intValue(), ((String) values[2]).trim());
 	}
 
-	public SimpleLongCode create(String field1, int field2, String field3) {
-		//TODO return create(new String[] { field1, field2, field3} );
-		return null;
+	public SimpleStringCode create(String field1, int field2, String field3) {
+		return create(new Object[] { field1, field2, field3} );
 	}
 
 	@Override
@@ -39,6 +36,7 @@ public class SimpleStringCodeFormat extends StringFormat<SimpleStringCode> {
 	}
 
 	public String prettyPrint(SimpleStringCode code) {
-		return null; //TODO return print(this.prettyPattern, code.longValue());
+		return this.prettyPattern.print(new Object[] { code.getField1(), code.getField2(),
+				code.getField3() } );
 	}
 }

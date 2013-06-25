@@ -16,7 +16,8 @@ public abstract class BaseIntegerCode<C extends IntegerCode<C>> implements Integ
 	@SuppressWarnings("unchecked")
 	@Override
 	public boolean equals(Object obj) {
-		return obj.getClass() == getClass() && ((IntegerCode<C>) obj).intValue() == this.value;
+		return obj != null && obj.getClass() == getClass() 
+				&& ((IntegerCode<C>) obj).intValue() == this.value;
 	}
 
 	@Override

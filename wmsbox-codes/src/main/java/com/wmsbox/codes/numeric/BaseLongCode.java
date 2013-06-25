@@ -15,7 +15,8 @@ public abstract class BaseLongCode<C extends LongCode<C>> implements LongCode<C>
 	@SuppressWarnings("unchecked")
 	@Override
 	public boolean equals(Object obj) {
-		return obj.getClass() == getClass() && ((LongCode<C>) obj).longValue() == this.value;
+		return obj != null && obj.getClass() == getClass() 
+				&& ((LongCode<C>) obj).longValue() == this.value;
 	}
 
 	@Override

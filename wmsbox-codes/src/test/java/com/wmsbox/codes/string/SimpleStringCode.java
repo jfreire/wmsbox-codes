@@ -8,12 +8,12 @@ public class SimpleStringCode extends StringCode<SimpleStringCode> {
 	private static final long serialVersionUID = 3194500462299404465L;
 
 	private final String field1;
-	private final int field2;
+	private final Integer field2;
 	private final String field3;
 
 	protected SimpleStringCode(String string,
 			@Name('A') @Size(3) String field1,
-			@Name('B') @Size(2) int field2,
+			@Name('B') @Size(2) Integer field2,
 			@Name('C') @Size(2) String field3) {
 		super(string);
 		this.field1 = field1;
@@ -25,7 +25,7 @@ public class SimpleStringCode extends StringCode<SimpleStringCode> {
 		return this.field1;
 	}
 
-	public int getField2() {
+	public Integer getField2() {
 		return this.field2;
 	}
 

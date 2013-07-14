@@ -129,7 +129,11 @@ public class CodePattern {
 			final Object fieldValue = values[i];
 			int stIndex = this.fieldEndIndexes[i];
 
-			if (fieldValue instanceof String) {
+			if (fieldValue == null) {
+				for (int j = this.sizes[i] - 1; j >= 0; j--) {
+					chars[stIndex--] = ' ';
+				}
+			} else if (fieldValue instanceof String) {
 				String value = (String) fieldValue;
 				int size = value.length();
 

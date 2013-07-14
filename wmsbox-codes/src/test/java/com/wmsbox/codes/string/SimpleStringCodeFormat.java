@@ -13,11 +13,15 @@ public class SimpleStringCodeFormat extends StringFormat<SimpleStringCode> {
 
 	@Override
 	protected SimpleStringCode create(String toString, Object[] values) {
-		return new SimpleStringCode(toString, ((String) values[0]).trim(),
-				((Number) values[1]).intValue(), ((String) values[2]).trim());
+		String field1 = ((String) values[0]);
+		Number field2 = ((Number) values[1]);
+		String field3 = ((String) values[2]);
+
+		return new SimpleStringCode(toString, field1 == null ? null : field1.trim(),
+				field2 == null ? null : field2.intValue(), field3 == null ? null : field3.trim());
 	}
 
-	public SimpleStringCode create(String field1, int field2, String field3) {
+	public SimpleStringCode create(String field1, Integer field2, String field3) {
 		return create(new Object[] { field1, field2, field3} );
 	}
 

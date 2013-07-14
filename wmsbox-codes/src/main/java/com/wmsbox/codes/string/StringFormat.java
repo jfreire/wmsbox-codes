@@ -49,6 +49,7 @@ public abstract class StringFormat<C extends StringCode<C>> extends AbstractForm
 			int inFieldIndex = 0;
 			int fieldIndex = 0;
 			long numericFieldValue = 0;
+			boolean nullNumber = false;
 
 			for (int i = 0; i < length; i++) {
 				final char ch = text.charAt(i);
@@ -61,7 +62,18 @@ public abstract class StringFormat<C extends StringCode<C>> extends AbstractForm
 				} else {
 					if (numericField) {
 						if (ch >= '0' && ch <= '9') {
+							if (nullNumber) {
+								throw new IllegalArgumentException("Invalid code " + text);
+							}
+
 							numericFieldValue = numericFieldValue * 10 + (ch - '0');
+							nullNumber = false;
+						} else if (ch == ' ') {
+							if (numericFieldValue != 0) {
+								throw new IllegalArgumentException("Invalid code " + text);
+							}
+
+							nullNumber = true;
 						} else {
 							throw new IllegalArgumentException("Invalid code " + text);
 						}
@@ -70,7 +82,9 @@ public abstract class StringFormat<C extends StringCode<C>> extends AbstractForm
 					if (++inFieldIndex == fieldSize) {
 						final Object fieldValue;
 
-						if (numericField) {
+						if (nullNumber) {
+							fieldValue = null;
+						} else if (numericField) {
 							final Class<?> type = this.fields[fieldIndex].getType();
 
 							if (type == Integer.class || type == Integer.TYPE) {
@@ -81,7 +95,7 @@ public abstract class StringFormat<C extends StringCode<C>> extends AbstractForm
 						} else {
 							fieldValue = text.substring(i - fieldSize + 1, i + 1);
 						}
-						System.out.println("----- " + text + " - " + fieldIndex + " - " + fieldValue);
+
 						split[fieldIndex++] = fieldValue;
 
 						if (fieldIndex < this.fieldSizes) {
@@ -89,6 +103,7 @@ public abstract class StringFormat<C extends StringCode<C>> extends AbstractForm
 							fieldSize = pattern.sizes[fieldIndex];
 							inFieldIndex = 0;
 							numericFieldValue = 0;
+							nullNumber = false;
 						}
 					}
 				}
